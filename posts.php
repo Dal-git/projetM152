@@ -3,12 +3,12 @@ require './lib/functions.inc.php';
 $image = $_FILES['mediafile'];
 $description = filter_input(INPUT_POST, "description");
 $action = filter_input(INPUT_POST, "action");
-
 switch ($action) {
     case 'ajouter':
-        createPost($image, $description);
+        createPost($description, $image);
         break;
 }
+var_dump($image);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -49,8 +49,7 @@ switch ($action) {
             </div>
         </div>
     </nav>
-    <!-- /Nav -->
-    <form method="POST" action="#">
+    <form method="POST" action="#" enctype="multipart/form-data">
         <div class="form-group">
             <div>
                 <input type="text" placeholder="Description" class="form-control" name="description">

@@ -25,12 +25,11 @@ function dbM152()
     return $dbc;
 }
 
-function createPost($image, $commentaire)
+function createPost($commentaire, $image)
 {
     static $ps = null;
-    $date = date('d.m.y');
-    $sql = "INSERT INTO `m152`.`POST` (`commentaire`, `dateDeCreation`) ";
-    $sql .= "VALUES (:COM, :DATE)";
+    $date = date("Y-m-d");
+    $sql = "INSERT INTO `m152`.`POST` (`commentaire`, `dateDeCreation`) VALUES (:COM, :DATE)";
     if ($ps == null) {
         $ps = dbM152()->prepare($sql);
     }
@@ -38,20 +37,18 @@ function createPost($image, $commentaire)
         $ps->bindParam(':COM', $commentaire, PDO::PARAM_STR);
         $ps->bindParam(':DATE', $date);
         $ps->execute();
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
         echo $e->getMessage();
     }
-    $sql = "INSERT INTO `m152`.`MEDIA` (`typeMedia`,`nomMedia`,`idPost`) ";
-    $sql .= "VALUES (:TYPEM, :NOMM,(select idPost from POST where commentaire = :COM and dateDeCreation = :DATE))";
+
+    $sql = "INSERT INTO `m152`.`MEDIA` (`typeMedia`,`nomMedia`,`dateDeCreation`,`idPost`) VALUES (:TYPEM, :NOMM,:DATE,(select idPost from POST where `commentaire` = :COM and `dateDeCreation` = :DATE))";
     $ps = dbM152()->prepare($sql);
     try {
         $ps->bindParam(':COM', $commentaire, PDO::PARAM_STR);
         $ps->bindParam(':DATE', $date);
-        for ($i = 0; $i < count($image['name']); $i++) {
-            $ps->bindParam(':TYPEM', $image['type'][$i], PDO::PARAM_STR);
-            $ps->bindParam(':NOMM', $image['name'][$i], PDO::PARAM_STR);
-            $ps->execute();
-        }
+        $ps->bindParam(':TYPEM', $image['type'][0], PDO::PARAM_STR);
+        $ps->bindParam(':NOMM', $image['name'][0], PDO::PARAM_STR);
+        $ps->execute();
     } catch (PDOException $e) {
         echo $e->getMessage();
     }
