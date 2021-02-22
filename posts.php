@@ -1,13 +1,6 @@
 <?php
 require './lib/functions.inc.php';
-$image = $_FILES['mediafile'];
-$description = filter_input(INPUT_POST, "description");
-$action = filter_input(INPUT_POST, "action");
-switch ($action) {
-    case 'ajouter':
-        createPost($description, $image);
-        break;
-}
+
 var_dump($image);
 ?>
 <!DOCTYPE html>

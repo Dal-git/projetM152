@@ -1,5 +1,15 @@
 <?php
 require "./lib/constantes.inc.php";
+
+$image = $_FILES['mediafile'];
+$description = filter_input(INPUT_POST, "description");
+$action = filter_input(INPUT_POST, "action");
+switch ($action) {
+    case 'ajouter':
+        createPost($description, $image);
+        break;
+}
+
 function dbM152()
 {
     static $dbc = null;
@@ -26,10 +36,11 @@ function dbM152()
 }
 
 function createPost($commentaire, $image)
-{
+{    
+    $image_size_totale = 0;
     static $ps = null;
     $date = date("Y-m-d");
-    $sql = "INSERT INTO `m152`.`POST` (`commentaire`, `dateDeCreation`) VALUES (:COM, :DATE)";
+    $sql = "INSERT INTO `m152`.`POST` (`commentaire`, `dateDeCreation`,`dateDeModification`) VALUES (:COM, :DATE,:DATE)";
     if ($ps == null) {
         $ps = dbM152()->prepare($sql);
     }
@@ -41,15 +52,30 @@ function createPost($commentaire, $image)
         echo $e->getMessage();
     }
 
-    $sql = "INSERT INTO `m152`.`MEDIA` (`typeMedia`,`nomMedia`,`dateDeCreation`,`idPost`) VALUES (:TYPEM, :NOMM,:DATE,(select idPost from POST where `commentaire` = :COM and `dateDeCreation` = :DATE))";
-    $ps = dbM152()->prepare($sql);
-    try {
-        $ps->bindParam(':COM', $commentaire, PDO::PARAM_STR);
-        $ps->bindParam(':DATE', $date);
-        $ps->bindParam(':TYPEM', $image['type'][0], PDO::PARAM_STR);
-        $ps->bindParam(':NOMM', $image['name'][0], PDO::PARAM_STR);
-        $ps->execute();
-    } catch (PDOException $e) {
-        echo $e->getMessage();
+    for ($i = 0; $i < count($image['type']); $i++) {
+        var_dump(count($image['size']));
+        if (explode("/", $image['type'][$i])[0] == "image" && $image['size'][$i] <= 3000000 && $image_size_totale <= 70000000) {
+            $image_size_totale += $image['size'][$i]; 
+            $sql = "INSERT INTO `m152`.`MEDIA` (`typeMedia`,`nomMedia`,`dateDeCreation`,`idPost`) VALUES (:TYPEM, :NOMM,:DATE,(select idPost from POST where `commentaire` = :COM and `dateDeCreation` = :DATE))";
+            $ps = dbM152()->prepare($sql);
+            try {
+                $ps->bindParam(':COM', $commentaire, PDO::PARAM_STR);
+                $ps->bindParam(':DATE', $date);
+                $ps->bindParam(':TYPEM', $image['type'][$i], PDO::PARAM_STR);
+                $ps->bindParam(':NOMM', $image['name'][$i], PDO::PARAM_STR);
+                $ps->execute();
+            } catch (PDOException $e) {
+                echo $e->getMessage();
+            }
+        }
+    }
+    foreach ($image["error"] as $key => $error) {
+        if ($error == UPLOAD_ERR_OK) {
+            $tmp_name = $image["tmp_name"][$key];
+            // basename() peut empêcher les attaques de système de fichiers;
+            // la validation/assainissement supplémentaire du nom de fichier peut être approprié
+            $name = basename($image["name"][$key]);
+            var_dump(move_uploaded_file($tmp_name, "./uploads/$name"));
+        }
     }
 }
