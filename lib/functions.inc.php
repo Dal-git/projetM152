@@ -36,10 +36,10 @@ function dbM152()
 }
 
 function createPost($commentaire, $image)
-{    
+{
     $image_size_totale = 0;
     static $ps = null;
-    $date = date("Y-m-d");
+    $date = new DateTime('Y-m-d H:i:s');
     $sql = "INSERT INTO `m152`.`POST` (`commentaire`, `dateDeCreation`,`dateDeModification`) VALUES (:COM, :DATE,:DATE)";
     if ($ps == null) {
         $ps = dbM152()->prepare($sql);
@@ -53,29 +53,31 @@ function createPost($commentaire, $image)
     }
 
     for ($i = 0; $i < count($image['type']); $i++) {
+
+        $uniqid = uniqid($image['name'][$i]);
+
         var_dump(count($image['size']));
         if (explode("/", $image['type'][$i])[0] == "image" && $image['size'][$i] <= 3000000 && $image_size_totale <= 70000000) {
-            $image_size_totale += $image['size'][$i]; 
+            $image_size_totale += $image['size'][$i];
             $sql = "INSERT INTO `m152`.`MEDIA` (`typeMedia`,`nomMedia`,`dateDeCreation`,`idPost`) VALUES (:TYPEM, :NOMM,:DATE,(select idPost from POST where `commentaire` = :COM and `dateDeCreation` = :DATE))";
             $ps = dbM152()->prepare($sql);
             try {
                 $ps->bindParam(':COM', $commentaire, PDO::PARAM_STR);
                 $ps->bindParam(':DATE', $date);
                 $ps->bindParam(':TYPEM', $image['type'][$i], PDO::PARAM_STR);
-                $ps->bindParam(':NOMM', $image['name'][$i], PDO::PARAM_STR);
+                $ps->bindParam(':NOMM', $uniqid, PDO::PARAM_STR);
                 $ps->execute();
             } catch (PDOException $e) {
                 echo $e->getMessage();
             }
+        } else {
+            echo "<script>alert(\"Un des champs est eronné\")</script>";
         }
-    }
-    foreach ($image["error"] as $key => $error) {
-        if ($error == UPLOAD_ERR_OK) {
-            $tmp_name = $image["tmp_name"][$key];
+        if ($image["error"] == UPLOAD_ERR_OK) {
+            $tmp_name = $image["tmp_name"][$i];
             // basename() peut empêcher les attaques de système de fichiers;
-            // la validation/assainissement supplémentaire du nom de fichier peut être approprié
-            $name = basename($image["name"][$key]);
-            var_dump(move_uploaded_file($tmp_name, "./uploads/$name"));
+            // la validation/assainissement supplémentaire du nom de fichier peut être approprié            
+            var_dump(move_uploaded_file($tmp_name, "./uploads/$uniqid"));
         }
     }
 }
