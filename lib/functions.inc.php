@@ -9,7 +9,7 @@ switch ($action) {
         createPost($description, $image);
         break;
 }
-
+//var_dump(RecupererImage(93));
 function dbM152()
 {
     static $dbc = null;
@@ -39,17 +39,24 @@ function createPost($commentaire, $image)
 {
     $image_size_totale = 0;
     static $ps = null;
-    $date = new DateTime('Y-m-d H:i:s');
-    $sql = "INSERT INTO `m152`.`POST` (`commentaire`, `dateDeCreation`,`dateDeModification`) VALUES (:COM, :DATE,:DATE)";
-    if ($ps == null) {
-        $ps = dbM152()->prepare($sql);
-    }
-    try {
-        $ps->bindParam(':COM', $commentaire, PDO::PARAM_STR);
-        $ps->bindParam(':DATE', $date);
-        $ps->execute();
-    } catch (Exception $e) {
-        echo $e->getMessage();
+    //$date = date('Y-m-d');
+    $dateTime = new DateTime('NOW');
+    $date = $dateTime->format('Y-m-d H:i:s');
+
+    if ($commentaire != "" && $commentaire != null) {
+        $sql = "INSERT INTO `m152`.`POST` (`commentaire`, `dateDeCreation`,`dateDeModification`) VALUES (:COM, :DATE,:DATE)";
+        if ($ps == null) {
+            $ps = dbM152()->prepare($sql);
+        }
+        try {
+            $ps->bindParam(':COM', $commentaire, PDO::PARAM_STR);
+            $ps->bindParam(':DATE', $date);
+            $ps->execute();
+        } catch (Exception $e) {
+            echo $e->getMessage();
+        }
+    } else {
+        echo "<script>alert(\"Commentaire est vide et c'est pas bien rempli le champ commentaire stp :D\")</script>";
     }
 
     for ($i = 0; $i < count($image['type']); $i++) {
@@ -57,27 +64,81 @@ function createPost($commentaire, $image)
         $uniqid = uniqid($image['name'][$i]);
 
         var_dump(count($image['size']));
-        if (explode("/", $image['type'][$i])[0] == "image" && $image['size'][$i] <= 3000000 && $image_size_totale <= 70000000) {
-            $image_size_totale += $image['size'][$i];
-            $sql = "INSERT INTO `m152`.`MEDIA` (`typeMedia`,`nomMedia`,`dateDeCreation`,`idPost`) VALUES (:TYPEM, :NOMM,:DATE,(select idPost from POST where `commentaire` = :COM and `dateDeCreation` = :DATE))";
-            $ps = dbM152()->prepare($sql);
-            try {
-                $ps->bindParam(':COM', $commentaire, PDO::PARAM_STR);
-                $ps->bindParam(':DATE', $date);
-                $ps->bindParam(':TYPEM', $image['type'][$i], PDO::PARAM_STR);
-                $ps->bindParam(':NOMM', $uniqid, PDO::PARAM_STR);
-                $ps->execute();
-            } catch (PDOException $e) {
-                echo $e->getMessage();
+        $tmp_name = $image["tmp_name"][$i];
+        var_dump(move_uploaded_file($tmp_name, "./uploads/$uniqid"));
+        if (file_exists("./uploads/$uniqid")) {
+            if (explode("/", $image['type'][$i])[0] == "image" && $image['size'][$i] <= 3000000 && $image_size_totale <= 70000000) {
+                $image_size_totale += $image['size'][$i];
+                $sql = "INSERT INTO `m152`.`MEDIA` (`typeMedia`,`nomMedia`,`dateDeCreation`,`idPost`) VALUES (:TYPEM, :NOMM,:DATE,(select idPost from POST where `commentaire` = :COM and `dateDeCreation` = :DATE))";
+                $ps = dbM152()->prepare($sql);
+                try {
+                    $ps->bindParam(':COM', $commentaire, PDO::PARAM_STR);
+                    $ps->bindParam(':DATE', $date);
+                    $ps->bindParam(':TYPEM', $image['type'][$i], PDO::PARAM_STR);
+                    $ps->bindParam(':NOMM', $uniqid, PDO::PARAM_STR);
+                    $ps->execute();
+                } catch (PDOException $e) {
+                    echo $e->getMessage();
+                }
+            } else {
+                echo "<script>alert(\"Un des champs est eronné\")</script>";
             }
         } else {
-            echo "<script>alert(\"Un des champs est eronné\")</script>";
+            echo "<script>alert(\"Une erreur est surven\")</script>";
         }
-        if ($image["error"] == UPLOAD_ERR_OK) {
-            $tmp_name = $image["tmp_name"][$i];
-            // basename() peut empêcher les attaques de système de fichiers;
-            // la validation/assainissement supplémentaire du nom de fichier peut être approprié            
-            var_dump(move_uploaded_file($tmp_name, "./uploads/$uniqid"));
+    }
+}
+
+function RecupererTable()
+{
+    $table = "";
+    static $ps = null;
+    $sql = "SELECT * FROM `m152`.`POST`";
+    if ($ps == null) {
+        $ps = dbM152()->prepare($sql);
+    }
+    try {
+        if ($ps->execute()) {
+            $table = $ps->fetchall(PDO::FETCH_ASSOC);
         }
+    } catch (Exception $e) {
+        echo $e->getMessage();
+    }
+    return $table;
+}
+
+function RecupererImage($idPost)
+{
+    $table = "";
+    static $ps = null;
+    $sql = "SELECT nomMedia FROM `m152`.`MEDIA` WHERE $idPost LIKE `idPost`";
+    if ($ps == null) {
+        $ps = dbM152()->prepare($sql);
+    }
+    try {
+        if ($ps->execute()) {
+            $table = $ps->fetchall(PDO::FETCH_ASSOC);
+        }
+    } catch (Exception $e) {
+        echo $e->getMessage();
+    }
+    return $table;
+}
+
+function Afficher()
+{
+    $tableauDePost = RecupererTable();
+    foreach ($tableauDePost as $post) {
+        echo "<div class=\"card\" style=\"width: 18rem;\">
+            <img class=\"card-img-top\" src=\"./uploads/";
+        echo RecupererImage($post['idPost'])[0]['nomMedia'];
+        echo "\"alt=\"Card image cap\">
+            <div class=\"card-body\">
+              <p class=\"card-text\">";
+        echo $post['commentaire'];
+        echo "</div>
+          </div>";
+          var_dump($post);
+          var_dump(RecupererImage(93));
     }
 }

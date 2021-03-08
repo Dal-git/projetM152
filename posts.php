@@ -53,6 +53,7 @@ var_dump($image);
             <button type="submit" class="btn btn-success col-md-1 offset-md-10" name="action" value="ajouter">Ajouter</button>
         </div>
     </form>
+    <main><?= Afficher() ?></main>
     <script src="bootstrap/js/bootstrap.min.js"></script>
 </body>
 
