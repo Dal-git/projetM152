@@ -1,3 +1,6 @@
+<?php
+require './lib/functions.inc.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -44,6 +47,7 @@
             <p class="card-text">Bienvenue!</p>
         </div>
     </div>
+    <main><?= Afficher(); ?></main>
     <script src="bootstrap/js/bootstrap.min.js"></script>
 </body>
 

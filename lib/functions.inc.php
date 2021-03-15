@@ -7,6 +7,7 @@ $action = filter_input(INPUT_POST, "action");
 switch ($action) {
     case 'ajouter':
         createPost($description, $image);
+        header('Location: home.php');
         break;
 }
 //var_dump(RecupererImage(93));
@@ -67,7 +68,7 @@ function createPost($commentaire, $image)
         $tmp_name = $image["tmp_name"][$i];
         var_dump(move_uploaded_file($tmp_name, "./uploads/$uniqid"));
         if (file_exists("./uploads/$uniqid")) {
-            if (explode("/", $image['type'][$i])[0] == "image" && $image['size'][$i] <= 3000000 && $image_size_totale <= 70000000) {
+            if ((explode("/", $image['type'][$i])[0] == "image" && $image['size'][$i] <= 3000000 || explode("/", $image['type'][$i])[0] == "video")  && $image_size_totale <= 70000000) {
                 $image_size_totale += $image['size'][$i];
                 $sql = "INSERT INTO `m152`.`MEDIA` (`typeMedia`,`nomMedia`,`dateDeCreation`,`idPost`) VALUES (:TYPEM, :NOMM,:DATE,(select idPost from POST where `commentaire` = :COM and `dateDeCreation` = :DATE))";
                 $ps = dbM152()->prepare($sql);
@@ -111,11 +112,12 @@ function RecupererImage($idPost)
 {
     $table = "";
     static $ps = null;
-    $sql = "SELECT nomMedia FROM `m152`.`MEDIA` WHERE $idPost LIKE `idPost`";
+    $sql = "SELECT * FROM `m152`.`MEDIA` WHERE `idPost` LIKE :idPost";
     if ($ps == null) {
         $ps = dbM152()->prepare($sql);
     }
     try {
+        $ps->bindParam(":idPost", $idPost);
         if ($ps->execute()) {
             $table = $ps->fetchall(PDO::FETCH_ASSOC);
         }
@@ -129,16 +131,24 @@ function Afficher()
 {
     $tableauDePost = RecupererTable();
     foreach ($tableauDePost as $post) {
-        echo "<div class=\"card\" style=\"width: 18rem;\">
-            <img class=\"card-img-top\" src=\"./uploads/";
-        echo RecupererImage($post['idPost'])[0]['nomMedia'];
-        echo "\"alt=\"Card image cap\">
+        echo "<div class=\"card\" style=\"width: 18rem;\">";
+        switch (RecupererImage($post['idPost'])[0]['typeMedia']) {
+            case "image/jpeg":
+                echo "<img class=\"card-img-top\" src=\"./uploads/";
+                echo RecupererImage($post['idPost'])[0]['nomMedia'];
+                break;
+            case "video/mp4":
+                echo "<video width=\"320\" height=\"240\" controls>";
+                echo "src=\"./uploads/" . RecupererImage($post['idPost'])[0]['nomMedia'] . "type=\"video/mp4\"";
+                echo "</video>";
+                break;
+        }
+        echo "\"alt=\"Card cap\">
             <div class=\"card-body\">
               <p class=\"card-text\">";
         echo $post['commentaire'];
         echo "</div>
           </div>";
-          var_dump($post);
-          var_dump(RecupererImage(93));
+        var_dump(RecupererImage($post['idPost']));
     }
 }

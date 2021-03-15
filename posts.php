@@ -1,7 +1,5 @@
 <?php
 require './lib/functions.inc.php';
-
-var_dump($image);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -52,8 +50,7 @@ var_dump($image);
             <button name="action" class="btn btn-warning" value="cancel">Annuler</button>
             <button type="submit" class="btn btn-success col-md-1 offset-md-10" name="action" value="ajouter">Ajouter</button>
         </div>
-    </form>
-    <main><?= Afficher() ?></main>
+    </form>    
     <script src="bootstrap/js/bootstrap.min.js"></script>
 </body>
 
