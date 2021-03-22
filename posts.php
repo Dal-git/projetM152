@@ -50,7 +50,7 @@ require './lib/functions.inc.php';
             <button name="action" class="btn btn-warning" value="cancel">Annuler</button>
             <button type="submit" class="btn btn-success col-md-1 offset-md-10" name="action" value="ajouter">Ajouter</button>
         </div>
-    </form>    
+    </form>
     <script src="bootstrap/js/bootstrap.min.js"></script>
 </body>
 

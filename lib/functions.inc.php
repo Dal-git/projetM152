@@ -7,10 +7,15 @@ $action = filter_input(INPUT_POST, "action");
 switch ($action) {
     case 'ajouter':
         createPost($description, $image);
-        header('Location: home.php');
+        //header('Location: home.php');
         break;
 }
 //var_dump(RecupererImage(93));
+/**
+ * Undocumented function
+ *
+ * @return void
+ */
 function dbM152()
 {
     static $dbc = null;
@@ -35,7 +40,13 @@ function dbM152()
     // Pas d'erreur, retourne un connecteur
     return $dbc;
 }
-
+/**
+ * Crée un post
+ *
+ * @param string $commentaire Commentaire de l'utilisateur
+ * @param string $image Image nécessaire à la création du post
+ * @return void
+ */
 function createPost($commentaire, $image)
 {
     $image_size_totale = 0;
@@ -64,18 +75,21 @@ function createPost($commentaire, $image)
 
         $uniqid = uniqid($image['name'][$i]);
 
-        var_dump(count($image['size']));
+        var_dump(explode("/", $image['type'][$i])[0]);
         $tmp_name = $image["tmp_name"][$i];
         var_dump(move_uploaded_file($tmp_name, "./uploads/$uniqid"));
         if (file_exists("./uploads/$uniqid")) {
-            if ((explode("/", $image['type'][$i])[0] == "image" && $image['size'][$i] <= 3000000 || explode("/", $image['type'][$i])[0] == "video")  && $image_size_totale <= 70000000) {
+            if (((explode("/", $image['type'][$i])[0] == "image" && $image['size'][$i] <= 3000000 )||( explode("/", $image['type'][$i])[0] == "video"))  && $image_size_totale <= 70000000) {
+                var_dump("ok");
                 $image_size_totale += $image['size'][$i];
                 $sql = "INSERT INTO `m152`.`MEDIA` (`typeMedia`,`nomMedia`,`dateDeCreation`,`idPost`) VALUES (:TYPEM, :NOMM,:DATE,(select idPost from POST where `commentaire` = :COM and `dateDeCreation` = :DATE))";
                 $ps = dbM152()->prepare($sql);
                 try {
                     $ps->bindParam(':COM', $commentaire, PDO::PARAM_STR);
+                    var_dump($commentaire);
                     $ps->bindParam(':DATE', $date);
-                    $ps->bindParam(':TYPEM', $image['type'][$i], PDO::PARAM_STR);
+                    var_dump($date);
+                    $ps->bindParam(':TYPEM', $image['type'][$i], PDO::PARAM_STR);                    
                     $ps->bindParam(':NOMM', $uniqid, PDO::PARAM_STR);
                     $ps->execute();
                 } catch (PDOException $e) {
@@ -132,6 +146,7 @@ function Afficher()
     $tableauDePost = RecupererTable();
     foreach ($tableauDePost as $post) {
         echo "<div class=\"card\" style=\"width: 18rem;\">";
+        var_dump($post);
         switch (RecupererImage($post['idPost'])[0]['typeMedia']) {
             case "image/jpeg":
                 echo "<img class=\"card-img-top\" src=\"./uploads/";
