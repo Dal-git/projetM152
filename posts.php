@@ -45,7 +45,7 @@ require './lib/functions.inc.php';
             <div>
                 <input type="text" placeholder="Description" class="form-control" name="description">
                 <label for="file">Sélectionner le fichier à envoyer</label>
-                <input type="file" id="file" name="mediafile[]" accept="image/*" multiple>
+                <input type="file" id="file" name="mediafile[]" accept="audio/*,video/*,image/*" multiple>
             </div>
             <button name="action" class="btn btn-warning" value="cancel">Annuler</button>
             <button type="submit" class="btn btn-success col-md-1 offset-md-10" name="action" value="ajouter">Ajouter</button>

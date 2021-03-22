@@ -71,15 +71,18 @@ function createPost($commentaire, $image)
         echo "<script>alert(\"Commentaire est vide et c'est pas bien rempli le champ commentaire stp :D\")</script>";
     }
 
+    var_dump($_FILES);
     for ($i = 0; $i < count($image['type']); $i++) {
 
         $uniqid = uniqid($image['name'][$i]);
 
+        var_dump($image);
         var_dump(explode("/", $image['type'][$i])[0]);
         $tmp_name = $image["tmp_name"][$i];
+        $tmp_name = str_replace(' ', '', $tmp_name);
         var_dump(move_uploaded_file($tmp_name, "./uploads/$uniqid"));
         if (file_exists("./uploads/$uniqid")) {
-            if (((explode("/", $image['type'][$i])[0] == "image" && $image['size'][$i] <= 3000000 )||( explode("/", $image['type'][$i])[0] == "video"))  && $image_size_totale <= 70000000) {
+            if (((explode("/", $image['type'][$i])[0] == "image" && $image['size'][$i] <= 3000000) || (explode("/", $image['type'][$i])[0] == "video")) || (explode("/", $image['type'][$i])[0] == "ad") && $image_size_totale <= 70000000) {
                 var_dump("ok");
                 $image_size_totale += $image['size'][$i];
                 $sql = "INSERT INTO `m152`.`MEDIA` (`typeMedia`,`nomMedia`,`dateDeCreation`,`idPost`) VALUES (:TYPEM, :NOMM,:DATE,(select idPost from POST where `commentaire` = :COM and `dateDeCreation` = :DATE))";
@@ -89,8 +92,10 @@ function createPost($commentaire, $image)
                     var_dump($commentaire);
                     $ps->bindParam(':DATE', $date);
                     var_dump($date);
-                    $ps->bindParam(':TYPEM', $image['type'][$i], PDO::PARAM_STR);                    
+                    $ps->bindParam(':TYPEM', $image['type'][$i], PDO::PARAM_STR);
+                    var_dump($image['type'][$i]);
                     $ps->bindParam(':NOMM', $uniqid, PDO::PARAM_STR);
+                    var_dump($uniqid);
                     $ps->execute();
                 } catch (PDOException $e) {
                     echo $e->getMessage();
@@ -99,7 +104,7 @@ function createPost($commentaire, $image)
                 echo "<script>alert(\"Un des champs est eronné\")</script>";
             }
         } else {
-            echo "<script>alert(\"Une erreur est surven\")</script>";
+            echo "<script>alert(\"Une erreur est survenu\")</script>";
         }
     }
 }
@@ -146,24 +151,27 @@ function Afficher()
     $tableauDePost = RecupererTable();
     foreach ($tableauDePost as $post) {
         echo "<div class=\"card\" style=\"width: 18rem;\">";
-        var_dump($post);
         switch (RecupererImage($post['idPost'])[0]['typeMedia']) {
             case "image/jpeg":
                 echo "<img class=\"card-img-top\" src=\"./uploads/";
                 echo RecupererImage($post['idPost'])[0]['nomMedia'];
+                echo "\"alt=\"Card cap\">";
                 break;
             case "video/mp4":
-                echo "<video width=\"320\" height=\"240\" controls>";
-                echo "src=\"./uploads/" . RecupererImage($post['idPost'])[0]['nomMedia'] . "type=\"video/mp4\"";
+                echo "<video width=\"320\" height=\"240\" autoplay controls loop>";
+                echo "<source src=\"./uploads/" . RecupererImage($post['idPost'])[0]['nomMedia'] . "\"" . " type=\"video/mp4\">";
                 echo "</video>";
                 break;
+            case "audio/mp3":
+                echo "<audio controls>";
+                echo "<source src=\"./uploads/" . RecupererImage($post['idPost'])[0]['nomMedia'] . "\"" . " type=\"video/mp4\">";
+                echo "</audio>";
+                break;
         }
-        echo "\"alt=\"Card cap\">
-            <div class=\"card-body\">
+        echo "<div class=\"card-body\">
               <p class=\"card-text\">";
         echo $post['commentaire'];
         echo "</div>
           </div>";
-        var_dump(RecupererImage($post['idPost']));
     }
 }
