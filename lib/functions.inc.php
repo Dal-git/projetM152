@@ -14,7 +14,7 @@ switch ($action) {
 /**
  * Undocumented function
  *
- * @return void
+ * @return PDO
  */
 function dbM152()
 {
@@ -45,7 +45,7 @@ function dbM152()
  *
  * @param string $commentaire Commentaire de l'utilisateur
  * @param string $image Image nécessaire à la création du post
- * @return void
+ * @return bool
  */
 function createPost($commentaire, $image)
 {
@@ -81,7 +81,7 @@ function createPost($commentaire, $image)
             $tmp_name = str_replace(' ', '', $tmp_name);
             var_dump(move_uploaded_file($tmp_name, "./uploads/$uniqid"));
             if (file_exists("./uploads/$uniqid")) {
-                if (((explode("/", $image['type'][$i])[0] == "image" && $image['size'][$i] <= 3000000) || (explode("/", $image['type'][$i])[0] == "video")) || (explode("/", $image['type'][$i])[0] == "audio") && $image_size_totale <= 70000000) {
+                if (((explode("/", $image['type'][$i])[0] == "image" && $image['size'][$i] <= 3000000) || explode("/", $image['type'][$i])[0] == "video") || (explode("/", $image['type'][$i])[0] == "audio") && $image_size_totale <= 70000000) {
                     $image_size_totale += $image['size'][$i];
                     $sql = "INSERT INTO `m152`.`MEDIA` (`typeMedia`,`nomMedia`,`dateDeCreation`,`idPost`) VALUES (:TYPEM, :NOMM,:DATE,(select idPost from POST where `commentaire` = :COM and `dateDeCreation` = :DATE))";
                     $ps = dbM152()->prepare($sql);
@@ -91,14 +91,17 @@ function createPost($commentaire, $image)
                         $ps->bindParam(':TYPEM', $image['type'][$i], PDO::PARAM_STR);
                         $ps->bindParam(':NOMM', $uniqid, PDO::PARAM_STR);
                         $ps->execute();
+                          
                     } catch (PDOException $e) {
                         echo $e->getMessage();
                     }
                 } else {
                     echo "<script>alert(\"Un des champs est eronné\")</script>";
+                    unlink( "./uploads/$uniqid");  
                 }
             } else {
-                echo "<script>alert(\"Une erreur est survenu\")</script>";
+                echo "<script>alert(\"Une erreur est survenu\")</script>";       
+                
             }
         }
         dbM152()->commit();
@@ -151,18 +154,18 @@ function Afficher()
     $tableauDePost = RecupererTable();
     foreach ($tableauDePost as $post) {
         echo "<div class=\"card\" style=\"width: 18rem;\">";
-        switch (RecupererImage($post['idPost'])[0]['typeMedia']) {
-            case "image/jpeg":
+        switch (explode("/",RecupererImage($post['idPost'])[0]['typeMedia'])[0]) {
+            case "image":
                 echo "<img class=\"card-img-top\" src=\"./uploads/";
                 echo RecupererImage($post['idPost'])[0]['nomMedia'];
                 echo "\"alt=\"Card cap\">";
                 break;
-            case "video/mp4":
+            case "video":
                 echo "<video width=\"286\" height=\"200\" autoplay controls loop>";
                 echo "<source src=\"./uploads/" . RecupererImage($post['idPost'])[0]['nomMedia'] . "\"" . " type=\"video/mp4\">";
                 echo "</video>";
                 break;
-            case "audio/mpeg":
+            case "audio":
                 echo "<audio controls>";
                 echo "<source src=\"./uploads/" . RecupererImage($post['idPost'])[0]['nomMedia'] . "\"" . " type=\"video/mp4\">";
                 echo "</audio>";
