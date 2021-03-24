@@ -9,6 +9,9 @@ switch ($action) {
         createPost($description, $image);
         //header('Location: home.php');
         break;
+    case 'supprimer':
+        
+        break;
 }
 //var_dump(RecupererImage(93));
 /**
@@ -91,17 +94,15 @@ function createPost($commentaire, $image)
                         $ps->bindParam(':TYPEM', $image['type'][$i], PDO::PARAM_STR);
                         $ps->bindParam(':NOMM', $uniqid, PDO::PARAM_STR);
                         $ps->execute();
-                          
                     } catch (PDOException $e) {
                         echo $e->getMessage();
                     }
                 } else {
                     echo "<script>alert(\"Un des champs est eronné\")</script>";
-                    unlink( "./uploads/$uniqid");  
+                    unlink("./uploads/$uniqid");
                 }
             } else {
-                echo "<script>alert(\"Une erreur est survenu\")</script>";       
-                
+                echo "<script>alert(\"Une erreur est survenu\")</script>";
             }
         }
         dbM152()->commit();
@@ -154,7 +155,7 @@ function Afficher()
     $tableauDePost = RecupererTable();
     foreach ($tableauDePost as $post) {
         echo "<div class=\"card\" style=\"width: 18rem;\">";
-        switch (explode("/",RecupererImage($post['idPost'])[0]['typeMedia'])[0]) {
+        switch (explode("/", RecupererImage($post['idPost'])[0]['typeMedia'])[0]) {
             case "image":
                 echo "<img class=\"card-img-top\" src=\"./uploads/";
                 echo RecupererImage($post['idPost'])[0]['nomMedia'];
@@ -173,9 +174,9 @@ function Afficher()
         }
         echo "<div class=\"card-body\">
               <p class=\"card-text\">";
-        echo $post['commentaire'];        
+        echo $post['commentaire'];
         echo "</div>
-        <input type=\"image\" src=\"./img/trash-alt-regular.svg\" style=\"width:20px;\" name=\"action\" value=\"supprimer\" />
+        <input type=\"image\" src=\"./img/trash-alt-regular.svg\" style=\"width:20px;\" name=\"action\" value=\"supprimer\" id=\"" . $post['idPost'] . " />
         <input type=\"image\" src=\"./img/edit-regular.svg\" style=\"width:20px;\" name=\"action\" value=\"modifier\"/>
           </div>";
     }
